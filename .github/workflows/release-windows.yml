@@ -107,7 +107,7 @@ jobs:
           "checksums=release-artifacts/SHA256SUMS.txt" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Upload workflow artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: SuperlightInvoice-Windows
           path: |
