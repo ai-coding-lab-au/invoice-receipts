@@ -23,8 +23,9 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 
 APP_TITLE = "Superlight Invoice"
-APP_DATA_DIR_NAME = "SuperlightInvoice"
-LEGACY_APP_DATA_DIR_NAME = "InvoiceReceipts"
+# This internal identifier is intentionally stable across product renames so an
+# upgrade keeps the user's existing data-folder preference automatically.
+APP_DATA_DIR_NAME = "InvoiceReceipts"
 DATA_DIR_PREFERENCE_FILE = "desktop-preferences.json"
 DESKTOP_COOKIE_NAME = "invoice_receipts_desktop"
 LOOPBACK_HOST = "127.0.0.1"
@@ -55,15 +56,6 @@ def data_dir_preference_path() -> Path:
     return default_user_data_dir() / DATA_DIR_PREFERENCE_FILE
 
 
-def legacy_data_dir_preference_path() -> Path:
-    """Locate the preference written before the Superlight Invoice rename."""
-    return (
-        default_user_data_dir().parent
-        / LEGACY_APP_DATA_DIR_NAME
-        / DATA_DIR_PREFERENCE_FILE
-    ).resolve()
-
-
 def _resolved_data_dir(value: str | os.PathLike[str], *, relative_to: Path) -> Path:
     expanded = Path(os.path.expandvars(str(value))).expanduser()
     return (relative_to / expanded).resolve() if not expanded.is_absolute() else expanded.resolve()
@@ -88,20 +80,13 @@ def _data_dir_from_dotenv(project_root: Path) -> Path | None:
 
 
 def load_last_data_dir(preference_file: Path | None = None) -> Path | None:
-    candidates = (
-        [preference_file]
-        if preference_file is not None
-        else [data_dir_preference_path(), legacy_data_dir_preference_path()]
-    )
-    for candidate in candidates:
-        try:
-            payload = json.loads(candidate.read_text(encoding="utf-8"))
-            value = payload.get("last_data_dir")
-            if isinstance(value, str) and value:
-                return Path(value).expanduser().resolve()
-        except (FileNotFoundError, OSError, ValueError, TypeError):
-            continue
-    return None
+    preference_file = preference_file or data_dir_preference_path()
+    try:
+        payload = json.loads(preference_file.read_text(encoding="utf-8"))
+        value = payload.get("last_data_dir")
+        return Path(value).expanduser().resolve() if isinstance(value, str) and value else None
+    except (FileNotFoundError, OSError, ValueError, TypeError):
+        return None
 
 
 def save_last_data_dir(data_dir: Path, preference_file: Path | None = None) -> None:
@@ -218,7 +203,6 @@ def configure_desktop_data_dir(
     """Ask for a data folder, remember it, and configure this process."""
     environ = environ if environ is not None else os.environ
     project_root = project_root or Path(__file__).resolve().parent.parent
-    preference_file_was_explicit = preference_file is not None
     preference_file = preference_file or data_dir_preference_path()
     frozen = getattr(sys, "frozen", False) if frozen is None else frozen
 
@@ -231,7 +215,7 @@ def configure_desktop_data_dir(
             environ=environ,
         )
 
-    last_used = load_last_data_dir(preference_file if preference_file_was_explicit else None)
+    last_used = load_last_data_dir(preference_file)
     dotenv_dir = None if frozen else _data_dir_from_dotenv(project_root)
     default = default_user_data_dir(environ=environ) if frozen else (project_root / ".data").resolve()
     initial = last_used or dotenv_dir or default
