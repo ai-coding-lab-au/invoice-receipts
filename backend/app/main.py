@@ -111,10 +111,19 @@ def compute_totals(
     gross = sum((money(line["amount"]) for line in lines), Decimal("0"))
     if not gst_registered:
         return money(gross), Decimal("0.00"), money(gross)
+    taxable = sum(
+        (
+            money(line["amount"])
+            for line in lines
+            if line.get("gst_treatment", "taxable") == "taxable"
+        ),
+        Decimal("0"),
+    )
     if gst_inclusive:
-        subtotal = money(gross / Decimal("1.10"))
-        return subtotal, money(gross - subtotal), money(gross)
-    gst = money(gross * Decimal("0.10"))
+        taxable_subtotal = money(taxable / Decimal("1.10"))
+        gst = money(taxable - taxable_subtotal)
+        return money(gross - gst), gst, money(gross)
+    gst = money(taxable * Decimal("0.10"))
     return money(gross), gst, money(gross + gst)
 
 
@@ -205,6 +214,7 @@ def snapshot(document: Document) -> dict:
                 "quantity": str(line.quantity),
                 "unit_price": str(money(line.unit_price)),
                 "amount": str(money(line.amount)),
+                "gst_treatment": line.gst_treatment,
             }
             for line in document.lines
         ],
@@ -297,6 +307,7 @@ def persist_pdf(
                     "quantity": line.quantity,
                     "unit_price": line.unit_price,
                     "amount": line.amount,
+                    "gst_treatment": line.gst_treatment,
                 }
                 for line in document.lines
             ],
@@ -390,7 +401,7 @@ async def lifespan(_app: FastAPI):
             runtime_lock_path(settings.data_dir), owner=f"PID {os.getpid()}"
         )
     except RuntimeLockError as exc:
-        raise RuntimeError(f"Invoice & Receipts is already running ({exc})") from exc
+        raise RuntimeError(f"Superlight Invoice is already running ({exc})") from exc
     try:
         init_db()
         yield
@@ -399,7 +410,7 @@ async def lifespan(_app: FastAPI):
         dispose_engine()
 
 
-app = FastAPI(title="Invoice & Receipts", version="2.0.0", lifespan=lifespan)
+app = FastAPI(title="Superlight Invoice", version="2.0.0", lifespan=lifespan)
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["127.0.0.1", "localhost", "[::1]", "::1", "testserver"],
@@ -681,6 +692,7 @@ def create_invoice(
             "quantity": line.quantity,
             "unit_price": line.unit_price,
             "amount": money(line.quantity * line.unit_price),
+            "gst_treatment": line.gst_treatment if company.gst_registered else "gst_free",
         }
         for line in payload.lines
     ]
@@ -778,6 +790,7 @@ def update_invoice(
             "quantity": line.quantity,
             "unit_price": line.unit_price,
             "amount": money(line.quantity * line.unit_price),
+            "gst_treatment": line.gst_treatment if company.gst_registered else "gst_free",
         }
         for line in payload.lines
     ]
@@ -900,6 +913,7 @@ def create_receipt(
             quantity=Decimal("1"),
             unit_price=net,
             amount=net,
+            gst_treatment="taxable" if gst else "gst_free",
         )
     )
     session.add(receipt)

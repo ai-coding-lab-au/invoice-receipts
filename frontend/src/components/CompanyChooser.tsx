@@ -49,13 +49,13 @@ export default function CompanyChooser({
         <header className="mb-8 flex items-start justify-between gap-6 border-b border-slate-300 pb-5">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-800">
-              Invoice &amp; Receipts
+              Superlight Invoice
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
               Choose a company ledger
             </h1>
             <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-              Each company keeps its own clients, document numbers, invoices and receipts.
+              Invoices, payments and receipts — without the accounting software.
               No login is required.
             </p>
           </div>

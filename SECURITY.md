@@ -26,7 +26,7 @@ a fix and disclosure where appropriate.
 
 ## Security boundary
 
-Invoice & Receipts is designed for one trusted local operator. It has no login
+Superlight Invoice is designed for one trusted local operator. It has no login
 and its company selector is an organisational boundary, not an access-control
 boundary. The backend must remain bound to `127.0.0.1`; exposing it to a LAN,
 reverse proxy or the internet is unsupported.

@@ -306,6 +306,48 @@ def test_invoice_totals_gst_inclusive(client):
     )
 
 
+@pytest.mark.parametrize("gst_inclusive", [False, True])
+def test_invoice_supports_taxable_and_gst_free_lines(client, gst_inclusive):
+    client_id = make_client(client)
+    taxable_price = "110.00" if gst_inclusive else "100.00"
+    response = client.post(
+        "/api/v1/invoices",
+        json={
+            "client_id": client_id,
+            "issue_date": TODAY.isoformat(),
+            "gst_inclusive": gst_inclusive,
+            "lines": [
+                {
+                    "description": "Taxable service",
+                    "quantity": "1",
+                    "unit_price": taxable_price,
+                    "gst_treatment": "taxable",
+                },
+                {
+                    "description": "GST-free service",
+                    "quantity": "1",
+                    "unit_price": "50.00",
+                    "gst_treatment": "gst_free",
+                },
+            ],
+            "operator": "Tester",
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    invoice = response.json()
+    assert (invoice["subtotal"], invoice["gst_amount"], invoice["total"]) == (
+        "150.00",
+        "10.00",
+        "160.00",
+    )
+    assert [line["gst_treatment"] for line in invoice["lines"]] == ["taxable", "gst_free"]
+
+    text = pdf_text(client.get(f"/api/v1/documents/{invoice['id']}/pdf").content)
+    assert "Taxable service [GST]" in text
+    assert "GST-free service [GST-free]" in text
+
+
 def test_invoice_without_gst_registration_charges_no_gst(client):
     client.patch("/api/v1/company", json={"gst_registered": False})
     invoice = make_invoice(client, make_client(client)).json()
@@ -314,6 +356,7 @@ def test_invoice_without_gst_registration_charges_no_gst(client):
         "0.00",
         "1000.00",
     )
+    assert invoice["lines"][0]["gst_treatment"] == "gst_free"
 
 
 def test_due_date_defaults_to_the_configured_payment_terms(client):

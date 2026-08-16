@@ -9,9 +9,13 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 - Open-source repository governance, security and release documentation.
 - Automated backend, frontend and Windows release workflows.
+- Per-line taxable or GST-free treatment, including mixed invoices and clear
+  line classification on Tax Invoice PDFs.
 
 ### Changed
 
+- Product branding is now Superlight Invoice, with upgrade-compatible reading
+  of the former desktop data-folder preference.
 - Zero-value invoices are permitted.
 - Invoice operator is optional while receipt and audit-sensitive actions retain
   their operator requirement.

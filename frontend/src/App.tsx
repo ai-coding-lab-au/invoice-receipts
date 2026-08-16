@@ -103,7 +103,7 @@ function Workspace({
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold">
-              {company.data?.trading_name || company.data?.legal_name || "Invoice & Receipts"}
+              {company.data?.trading_name || company.data?.legal_name || "Superlight Invoice"}
             </div>
             <div className="text-xs text-slate-400">
               {company.data?.gst_registered ? "GST registered" : "Not GST registered"}

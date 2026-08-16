@@ -41,8 +41,8 @@ python .\scripts\check_repository_hygiene.py .
 
 The release workflow produces:
 
-- `InvoiceReceipts-<version>-Setup.exe`, the recommended per-user installer;
-- `InvoiceReceipts-<version>-windows-x64-portable.zip`, for portable use;
+- `SuperlightInvoice-<version>-Setup.exe`, the recommended per-user installer;
+- `SuperlightInvoice-<version>-windows-x64-portable.zip`, for portable use;
 - `SHA256SUMS.txt`, covering both downloads; and
 - GitHub artifact attestations for the installer and portable archive.
 

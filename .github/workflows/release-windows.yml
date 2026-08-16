@@ -62,15 +62,15 @@ jobs:
       - name: Add source and license notices
         shell: pwsh
         run: |
-          python scripts/collect_licenses.py --output dist/InvoiceReceipts/licenses
-          Copy-Item README.md dist/InvoiceReceipts/README.md
+          python scripts/collect_licenses.py --output dist/SuperlightInvoice/licenses
+          Copy-Item README.md dist/SuperlightInvoice/README.md
           @(
             "Corresponding source for this build:",
             "${{ github.server_url }}/${{ github.repository }}/tree/${{ github.sha }}",
             "",
             "License: AGPL-3.0-only. See licenses/project/LICENSE.",
             "This software is provided without warranty."
-          ) | Set-Content -Encoding UTF8 dist/InvoiceReceipts/SOURCE.txt
+          ) | Set-Content -Encoding UTF8 dist/SuperlightInvoice/SOURCE.txt
 
       - name: Create installer, portable archive and checksums
         id: package
@@ -82,13 +82,13 @@ jobs:
 
           $installer = & ./scripts/build-windows-installer.ps1 `
             -Version $version `
-            -SourceDirectory (Join-Path $PWD "dist\InvoiceReceipts") `
+            -SourceDirectory (Join-Path $PWD "dist\SuperlightInvoice") `
             -OutputDirectory $releaseDirectory
           $installer = [System.IO.Path]::GetFullPath($installer)
 
-          $archiveName = "InvoiceReceipts-$version-windows-x64-portable.zip"
+          $archiveName = "SuperlightInvoice-$version-windows-x64-portable.zip"
           $archive = Join-Path $releaseDirectory $archiveName
-          Compress-Archive -Path dist/InvoiceReceipts -DestinationPath $archive
+          Compress-Archive -Path dist/SuperlightInvoice -DestinationPath $archive
 
           @($installer, $archive) | ForEach-Object {
             if ((Get-Item -LiteralPath $_).Length -le 1MB) {
@@ -109,7 +109,7 @@ jobs:
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v6
         with:
-          name: InvoiceReceipts-Windows
+          name: SuperlightInvoice-Windows
           path: |
             ${{ steps.package.outputs.installer }}
             ${{ steps.package.outputs.archive }}

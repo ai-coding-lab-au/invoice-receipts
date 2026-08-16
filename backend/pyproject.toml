@@ -1,7 +1,7 @@
 [project]
-name = "invoice-receipt-backend"
+name = "superlight-invoice-backend"
 version = "2.0.0"
-description = "Local-first, multi-company invoice and receipt workflow"
+description = "Superlight Invoice local-first invoice, payment and receipt workflow"
 license = { text = "AGPL-3.0-only" }
 requires-python = ">=3.11"
 dependencies = [

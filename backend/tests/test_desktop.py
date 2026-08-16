@@ -113,6 +113,31 @@ def test_desktop_prompts_with_and_remembers_the_last_data_folder(tmp_path):
     assert seen[-1] == (selected_folder.resolve(), selected_folder.resolve())
 
 
+def test_desktop_reads_the_pre_rename_data_folder_preference(tmp_path, monkeypatch):
+    current_preference = tmp_path / "SuperlightInvoice" / "desktop-preferences.json"
+    legacy_preference = tmp_path / "InvoiceReceipts" / "desktop-preferences.json"
+    selected_folder = tmp_path / "existing-company-data"
+    legacy_preference.parent.mkdir(parents=True)
+    legacy_preference.write_text(
+        '{"last_data_dir": "' + str(selected_folder).replace("\\", "\\\\") + '"}',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(desktop, "data_dir_preference_path", lambda: current_preference)
+    monkeypatch.setattr(desktop, "legacy_data_dir_preference_path", lambda: legacy_preference)
+
+    assert load_last_data_dir() == selected_folder.resolve()
+
+    seen = []
+    result = configure_desktop_data_dir(
+        chooser=lambda initial, last_used: seen.append((initial, last_used)) or None,
+        environ={},
+        project_root=tmp_path / "project",
+        frozen=True,
+    )
+    assert result is None
+    assert seen == [(selected_folder.resolve(), selected_folder.resolve())]
+
+
 def test_explicit_data_dir_bypasses_the_interactive_picker(tmp_path):
     project_root = tmp_path / "project"
     project_root.mkdir()

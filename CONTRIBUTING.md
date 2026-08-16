@@ -1,6 +1,6 @@
-# Contributing to Invoice & Receipts
+# Contributing to Superlight Invoice
 
-Thank you for helping improve Invoice & Receipts. The project is a local-first
+Thank you for helping improve Superlight Invoice. The project is a local-first
 desktop and loopback web application. Changes should preserve that deployment
 boundary unless a proposal also introduces authentication, authorization and a
 reviewed network threat model.

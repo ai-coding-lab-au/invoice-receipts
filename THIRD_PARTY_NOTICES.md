@@ -1,6 +1,6 @@
 # Third-party notices
 
-Invoice & Receipts is licensed under `AGPL-3.0-only`. It includes or depends on
+Superlight Invoice is licensed under `AGPL-3.0-only`. It includes or depends on
 third-party software under compatible licenses. Copyright in those components
 remains with their respective owners.
 

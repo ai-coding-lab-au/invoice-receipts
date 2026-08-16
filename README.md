@@ -1,9 +1,9 @@
-# Invoice & Receipts
+# Superlight Invoice
 
-A small, self-contained system for managing one or more companies: select a
-company, issue an invoice, then record payments against it as receipts.
-Everything runs as one local Python process — Node.js is only needed if you
-want to rebuild the interface.
+A deliberately small, self-contained tool for invoices, payments and receipts
+without the accounting software. Select a company, issue an invoice, then
+record one or more payments against it as receipts. Everything runs as one
+local Python process — Node.js is only needed to rebuild the interface.
 
 The project is open source under the GNU Affero General Public License v3.0
 only (`AGPL-3.0-only`). It is designed for local use and does not include
@@ -24,7 +24,9 @@ Company
 - Add a company from the company chooser with its legal name and optional
   business name; complete its tax, address and bank details under Settings.
 
-- An invoice is issued to a client and carries lines, GST and a due date.
+- An invoice is issued to a client and carries lines, GST and a due date. A
+  GST-registered issuer can mark each line as taxable or GST-free, including
+  invoices that contain both.
 - A receipt records money actually received against that invoice. Several
   receipts can apply to one invoice, so part payments are supported.
 - The invoice status follows the money automatically: `issued` →
@@ -75,15 +77,15 @@ To create a distributable, self-contained application folder:
 build-desktop.cmd
 ```
 
-End users should download `InvoiceReceipts-<version>-Setup.exe` from the
+End users should download `SuperlightInvoice-<version>-Setup.exe` from the
 project website or GitHub Releases. It installs for the current Windows user,
 does not require administrator access, adds a Start menu shortcut and includes
 an uninstaller. The target PC does not need Python or Node.js, but it does need
 the Microsoft WebView2 Runtime (included in current Windows 11 installations
 and most supported Windows 10 systems).
 
-The developer build produces `dist\InvoiceReceipts\InvoiceReceipts.exe`. Keep
-the whole `InvoiceReceipts` folder together; the executable cannot run without
+The developer build produces `dist\SuperlightInvoice\SuperlightInvoice.exe`. Keep
+the whole `SuperlightInvoice` folder together; the executable cannot run without
 its adjacent `_internal` directory. To turn that folder into the single-file
 installer after installing Inno Setup 6:
 
@@ -100,10 +102,12 @@ picker at that location. Changing folders opens a different database; it does
 not move the contents of the previous folder. Cancel exits without opening any
 database.
 
-An installed/frozen desktop build stores its database and log under
-`%LOCALAPPDATA%\InvoiceReceipts` by default. `DATA_DIR` still supplies the
-initial choice when it is explicitly set. The confirmed folder is remembered
-in `%LOCALAPPDATA%\InvoiceReceipts\desktop-preferences.json`.
+An installed/frozen desktop build suggests `%LOCALAPPDATA%\SuperlightInvoice`
+by default. `DATA_DIR` still supplies the initial choice when explicitly set.
+The confirmed folder is remembered in
+`%LOCALAPPDATA%\SuperlightInvoice\desktop-preferences.json`. Upgrades also read
+the former `%LOCALAPPDATA%\InvoiceReceipts\desktop-preferences.json`, so the
+rename does not lose the last selected data folder.
 
 ## Run on Linux/macOS
 
@@ -163,6 +167,15 @@ Do not expose port 8790 to a LAN, a reverse proxy or the internet. The app
 rejects requests whose `Host` header is not loopback, but that is a safety net,
 not a substitute for keeping it local.
 
+## Product boundary
+
+Superlight Invoice intentionally sits between Word/Excel templates and a full
+accounting system. It manages company and client details, invoices, GST,
+payments, receipts, immutable PDFs and their audit trail. It does not provide a
+general ledger, bank feeds, reconciliation, payroll, inventory, BAS lodgement
+or financial statements. See [`docs/PRODUCT_SCOPE.md`](docs/PRODUCT_SCOPE.md)
+for the maintained scope and roadmap rules.
+
 ## Privacy and responsibility
 
 - The selected data directory can contain company details, client information,
@@ -184,7 +197,7 @@ adds authentication, authorization and a reviewed network threat model.
 
 ## License
 
-Copyright © 2026 Invoice & Receipts contributors.
+Copyright © 2026 Superlight Invoice contributors.
 
 This project is licensed under `AGPL-3.0-only`. See `LICENSE` for the complete
 terms and `THIRD_PARTY_NOTICES.md` for bundled dependency and font notices.

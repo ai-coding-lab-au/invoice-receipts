@@ -125,7 +125,7 @@ export default function SettingsPage() {
               checked={merged.gst_registered}
               onChange={(event) => set("gst_registered", event.target.checked)}
             />
-            Registered for GST (invoices are titled &ldquo;Tax Invoice&rdquo; and add 10%)
+            Registered for GST (choose GST or GST-free on each invoice line)
           </label>
           <label className="block text-sm">
             <span className="mb-1 block text-slate-600">Default payment terms (days)</span>

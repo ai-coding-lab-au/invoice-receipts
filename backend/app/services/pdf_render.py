@@ -133,7 +133,7 @@ def render_document_pdf(
                     bank_account_name, bank_name, bank_bsb,
                     bank_account_number, bank_swift.
     `customer` keys: name, address (multi-line str), email, phone.
-    `lines`: list of {description, quantity, unit_price, amount}.
+    `lines`: list of {description, quantity, unit_price, amount, gst_treatment}.
     """
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
@@ -305,10 +305,14 @@ def render_document_pdf(
     row_y = table_top - row_h
     c.setStrokeColor(ROW_DIVIDER)
     for li in body_lines:
+        description = str(li.get("description", "")) if li is not None else ""
+        if li is not None and is_gst_registered and doc_type == "invoice":
+            tax_label = "GST" if li.get("gst_treatment", "taxable") == "taxable" else "GST-free"
+            description = f"{description} [{tax_label}]"
         wrapped_description = (
             _wrap_line(
                 c,
-                str(li.get("description", "")),
+                description,
                 FONT_BASE,
                 9.2,
                 col_widths[0] - 12,
@@ -371,7 +375,7 @@ def render_document_pdf(
 
     # Use the document's persisted totals directly:
     #   subtotal       = pre-GST
-    #   gst_amount     = 10% when company is GST-registered, else 0
+    #   gst_amount     = 10% of taxable lines when registered, else 0
     #   total          = subtotal + gst_amount
     # The fees row, GST row and bottom TOTAL band all read from these,
     # so the PDF stays consistent with the list/detail UI and downstream
