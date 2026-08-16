@@ -1,6 +1,6 @@
 [project]
 name = "superlight-invoice-backend"
-version = "2.0.0"
+version = "2.1.0"
 description = "Superlight Invoice local-first invoice, payment and receipt workflow"
 license = { text = "AGPL-3.0-only" }
 requires-python = ">=3.11"
