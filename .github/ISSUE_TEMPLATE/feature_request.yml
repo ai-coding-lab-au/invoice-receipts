@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose a focused improvement to the supported local workflow.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user outcome is difficult today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: network
+    attributes:
+      label: Deployment boundary
+      options:
+        - label: This proposal does not assume the unauthenticated app is exposed to a LAN or the internet.
+          required: true
