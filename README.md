@@ -102,12 +102,12 @@ picker at that location. Changing folders opens a different database; it does
 not move the contents of the previous folder. Cancel exits without opening any
 database.
 
-An installed/frozen desktop build suggests `%LOCALAPPDATA%\SuperlightInvoice`
+An installed/frozen desktop build suggests `%LOCALAPPDATA%\InvoiceReceipts`
 by default. `DATA_DIR` still supplies the initial choice when explicitly set.
 The confirmed folder is remembered in
-`%LOCALAPPDATA%\SuperlightInvoice\desktop-preferences.json`. Upgrades also read
-the former `%LOCALAPPDATA%\InvoiceReceipts\desktop-preferences.json`, so the
-rename does not lose the last selected data folder.
+`%LOCALAPPDATA%\InvoiceReceipts\desktop-preferences.json`. This internal folder
+name intentionally remains unchanged after the Superlight Invoice rename, so
+upgrades keep the last selected data folder without a migration step.
 
 ## Run on Linux/macOS
 
