@@ -169,6 +169,12 @@ class DocumentLine(Base):
     quantity: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False, default=Decimal("1"))
     unit_price: Mapped[Decimal] = mapped_column(MONEY, nullable=False)
     amount: Mapped[Decimal] = mapped_column(MONEY, nullable=False)
+    # ``taxable`` means the standard Australian 10% GST rate applies;
+    # ``gst_free`` means this line contributes no GST.  Existing databases
+    # are migrated conservatively in db.py without rewriting issued PDFs.
+    gst_treatment: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="gst_free", server_default="gst_free"
+    )
 
     document: Mapped[Document] = relationship(back_populates="lines")
 

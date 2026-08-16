@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from decimal import Decimal
 import re
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     AfterValidator,
@@ -230,6 +230,7 @@ class InvoiceLineIn(BaseModel):
     unit_price: Decimal = Field(
         default=Decimal("0"), ge=0, le=MONEY_MAX, max_digits=16, decimal_places=2
     )
+    gst_treatment: Literal["taxable", "gst_free"] = "taxable"
 
 
 class InvoiceCreate(BaseModel):
@@ -264,6 +265,7 @@ class LineOut(BaseModel):
     quantity: Decimal
     unit_price: Decimal
     amount: Decimal
+    gst_treatment: Literal["taxable", "gst_free"]
 
 
 class ReceiptSummary(BaseModel):

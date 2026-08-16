@@ -1,5 +1,5 @@
 {
-  "name": "invoice-receipt-frontend",
+  "name": "superlight-invoice-frontend",
   "private": true,
   "version": "2.0.0",
   "license": "AGPL-3.0-only",
@@ -14,7 +14,7 @@
     "axios": "^1.12.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.30.4"
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

@@ -40,6 +40,7 @@ export interface DocumentLine {
   quantity: string;
   unit_price: string;
   amount: string;
+  gst_treatment: "taxable" | "gst_free";
 }
 
 export interface ReceiptSummary {
@@ -103,4 +104,5 @@ export interface InvoiceLineInput {
   description: string;
   quantity: string;
   unit_price: string;
+  gst_treatment: "taxable" | "gst_free";
 }

@@ -22,7 +22,9 @@ from starlette.responses import JSONResponse, RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 
-APP_TITLE = "Invoice & Receipts"
+APP_TITLE = "Superlight Invoice"
+# This internal identifier is intentionally stable across product renames so an
+# upgrade keeps the user's existing data-folder preference automatically.
 APP_DATA_DIR_NAME = "InvoiceReceipts"
 DATA_DIR_PREFERENCE_FILE = "desktop-preferences.json"
 DESKTOP_COOKIE_NAME = "invoice_receipts_desktop"

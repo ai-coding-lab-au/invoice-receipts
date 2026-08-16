@@ -7,6 +7,7 @@ from app.db import (
     _migrate_company_names,
     _migrate_company_scope,
     _migrate_database,
+    _migrate_line_gst_treatment,
 )
 from app.models import Client, Company, DocumentCounter
 
@@ -297,3 +298,31 @@ def test_duplicate_document_numbers_report_a_repair_error_without_renaming(tmp_p
             "SELECT id, doc_number FROM documents ORDER BY id"
         ).all()
     assert numbers == [(30, "INV-2026-0001"), (31, "INV-2026-0001")]
+
+
+def test_legacy_lines_gain_gst_treatment_without_overwriting_new_choices(tmp_path):
+    legacy_engine = create_engine(f"sqlite:///{(tmp_path / 'legacy-line-tax.db').as_posix()}")
+    with legacy_engine.begin() as connection:
+        connection.exec_driver_sql(
+            "CREATE TABLE documents (id INTEGER PRIMARY KEY, gst_amount NUMERIC NOT NULL)"
+        )
+        connection.exec_driver_sql(
+            "CREATE TABLE document_lines (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL)"
+        )
+        connection.exec_driver_sql("INSERT INTO documents VALUES (1, 10.00), (2, 0.00)")
+        connection.exec_driver_sql("INSERT INTO document_lines VALUES (10, 1), (20, 2)")
+
+        _migrate_line_gst_treatment(connection)
+        migrated = connection.exec_driver_sql(
+            "SELECT id, gst_treatment FROM document_lines ORDER BY id"
+        ).all()
+        connection.exec_driver_sql(
+            "UPDATE document_lines SET gst_treatment = 'gst_free' WHERE id = 10"
+        )
+        _migrate_line_gst_treatment(connection)
+        preserved = connection.exec_driver_sql(
+            "SELECT gst_treatment FROM document_lines WHERE id = 10"
+        ).scalar_one()
+
+    assert migrated == [(10, "taxable"), (20, "gst_free")]
+    assert preserved == "gst_free"

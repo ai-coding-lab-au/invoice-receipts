@@ -125,7 +125,7 @@ def main() -> None:
     python_rows = copy_python_licenses(output)
     node_rows = copy_node_licenses(output)
     summary = [
-        "Invoice & Receipts dependency license inventory",
+        "Superlight Invoice dependency license inventory",
         "",
         "Python distributions",
         "--------------------",

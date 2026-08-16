@@ -9,7 +9,14 @@ import { safeStorage } from "../lib/safeStorage";
 import { useModalKeys } from "../lib/useModalKeys";
 import type { Client, Company, DocumentRecord, InvoiceLineInput } from "../types/api";
 
-const emptyLine = (): InvoiceLineInput => ({ description: "", quantity: "1", unit_price: "0.00" });
+const emptyLine = (): InvoiceLineInput => ({
+  description: "",
+  quantity: "1",
+  unit_price: "0.00",
+  gst_treatment: "taxable",
+});
+
+const roundCents = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 export default function InvoiceEditorDialog({
   invoice,
@@ -42,6 +49,7 @@ export default function InvoiceEditorDialog({
           description: line.description,
           quantity: String(Number(line.quantity)),
           unit_price: line.unit_price,
+          gst_treatment: line.gst_treatment,
         }))
       : [emptyLine()],
   );
@@ -86,17 +94,24 @@ export default function InvoiceEditorDialog({
 
   const totals = useMemo(() => {
     if (lineProblems.length) return null;
-    const gross = lines.reduce(
-      (sum, line) => sum + Number(stripMoney(line.quantity)) * Number(stripMoney(line.unit_price)),
-      0,
-    );
+    const amounts = lines.map((line) => ({
+      amount: roundCents(
+        Number(stripMoney(line.quantity)) * Number(stripMoney(line.unit_price)),
+      ),
+      taxable: line.gst_treatment === "taxable",
+    }));
+    const gross = roundCents(amounts.reduce((sum, line) => sum + line.amount, 0));
     if (!gstRegistered) return { subtotal: gross, gst: 0, total: gross };
+    const taxable = roundCents(
+      amounts.reduce((sum, line) => sum + (line.taxable ? line.amount : 0), 0),
+    );
     if (gstInclusive) {
-      const subtotal = Math.round((gross / 1.1) * 100) / 100;
-      return { subtotal, gst: Math.round((gross - subtotal) * 100) / 100, total: gross };
+      const taxableSubtotal = roundCents(taxable / 1.1);
+      const gst = roundCents(taxable - taxableSubtotal);
+      return { subtotal: roundCents(gross - gst), gst, total: gross };
     }
-    const gst = Math.round(gross * 10) / 100;
-    return { subtotal: gross, gst, total: Math.round((gross + gst) * 100) / 100 };
+    const gst = roundCents(taxable * 0.1);
+    return { subtotal: gross, gst, total: roundCents(gross + gst) };
   }, [lines, lineProblems.length, gstRegistered, gstInclusive]);
 
   const problems = [
@@ -119,6 +134,7 @@ export default function InvoiceEditorDialog({
           description: line.description.trim(),
           quantity: stripMoney(line.quantity),
           unit_price: stripMoney(line.unit_price),
+          gst_treatment: line.gst_treatment,
         })),
         gst_inclusive: gstInclusive,
         notes: notes.trim() || null,
@@ -256,7 +272,8 @@ export default function InvoiceEditorDialog({
                   Line items
                 </h3>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  Add each product or service as a separate line.
+                  Add each product or service as a separate line
+                  {gstRegistered ? " and choose its GST treatment." : "."}
                 </p>
               </div>
               <button
@@ -266,8 +283,15 @@ export default function InvoiceEditorDialog({
                 + Add line
               </button>
             </div>
-            <div className="mb-1 hidden grid-cols-[minmax(0,1fr)_76px_112px_104px_32px] gap-2 px-2 text-[11px] font-medium uppercase tracking-wide text-slate-500 sm:grid">
+            <div
+              className={`mb-1 hidden gap-2 px-2 text-[11px] font-medium uppercase tracking-wide text-slate-500 sm:grid ${
+                gstRegistered
+                  ? "sm:grid-cols-[minmax(0,1fr)_88px_72px_104px_96px_32px]"
+                  : "sm:grid-cols-[minmax(0,1fr)_76px_112px_104px_32px]"
+              }`}
+            >
               <span>Description *</span>
+              {gstRegistered && <span>Tax</span>}
               <span className="text-right">Qty</span>
               <span className="text-right">Unit price</span>
               <span className="text-right">Amount</span>
@@ -277,7 +301,11 @@ export default function InvoiceEditorDialog({
               {lines.map((line, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-[70px_110px_minmax(0,1fr)_32px] gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:grid-cols-[minmax(0,1fr)_76px_112px_104px_32px] sm:border-0 sm:p-0"
+                  className={`grid grid-cols-[minmax(0,1fr)_72px_104px_32px] gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:border-0 sm:p-0 ${
+                    gstRegistered
+                      ? "sm:grid-cols-[minmax(0,1fr)_88px_72px_104px_96px_32px]"
+                      : "sm:grid-cols-[minmax(0,1fr)_76px_112px_104px_32px]"
+                  }`}
                 >
                   <input
                     className="input col-span-full sm:col-span-1"
@@ -287,6 +315,21 @@ export default function InvoiceEditorDialog({
                     value={line.description}
                     onChange={(event) => updateLine(index, { description: event.target.value })}
                   />
+                  {gstRegistered && (
+                    <select
+                      className="input col-span-2 sm:col-span-1"
+                      aria-label={`Line ${index + 1} GST treatment`}
+                      value={line.gst_treatment}
+                      onChange={(event) =>
+                        updateLine(index, {
+                          gst_treatment: event.target.value as InvoiceLineInput["gst_treatment"],
+                        })
+                      }
+                    >
+                      <option value="taxable">GST 10%</option>
+                      <option value="gst_free">GST-free</option>
+                    </select>
+                  )}
                   <input
                     className="input text-right"
                     inputMode="decimal"
@@ -361,7 +404,7 @@ export default function InvoiceEditorDialog({
                     checked={gstInclusive}
                     onChange={(event) => setGstInclusive(event.target.checked)}
                   />
-                  Line prices already include GST
+                  Taxable line prices already include GST
                 </label>
               )}
               <div className="space-y-1 text-sm">

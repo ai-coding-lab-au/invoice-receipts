@@ -25,4 +25,4 @@ set "RESULT=%ERRORLEVEL%"
 popd
 if not "%RESULT%"=="0" exit /b %RESULT%
 
-echo Desktop app built in dist\InvoiceReceipts
+echo Desktop app built in dist\SuperlightInvoice

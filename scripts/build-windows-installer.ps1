@@ -13,7 +13,7 @@ if ($Version -notmatch "^[0-9A-Za-z][0-9A-Za-z._-]*$") {
 }
 
 if (-not $SourceDirectory) {
-    $SourceDirectory = Join-Path $projectRoot "dist\InvoiceReceipts"
+    $SourceDirectory = Join-Path $projectRoot "dist\SuperlightInvoice"
 }
 if (-not $OutputDirectory) {
     $OutputDirectory = Join-Path $projectRoot "installer-output"
@@ -21,7 +21,7 @@ if (-not $OutputDirectory) {
 
 $sourcePath = [System.IO.Path]::GetFullPath($SourceDirectory)
 $outputPath = [System.IO.Path]::GetFullPath($OutputDirectory)
-$application = Join-Path $sourcePath "InvoiceReceipts.exe"
+$application = Join-Path $sourcePath "SuperlightInvoice.exe"
 if (-not (Test-Path -LiteralPath $application -PathType Leaf)) {
     throw "The packaged application was not found: $application"
 }
@@ -43,7 +43,7 @@ if (-not $compiler) {
 }
 
 New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
-$installerName = "InvoiceReceipts-$Version-Setup"
+$installerName = "SuperlightInvoice-$Version-Setup"
 $scriptPath = Join-Path $projectRoot "installer\InvoiceReceipts.iss"
 $arguments = @(
     "/DMyAppVersion=$Version",

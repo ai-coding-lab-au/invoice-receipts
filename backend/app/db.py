@@ -303,6 +303,38 @@ def _migrate_company_scope(connection: Connection) -> None:
         connection.exec_driver_sql("DROP TABLE document_counters")
 
 
+def _migrate_line_gst_treatment(connection: Connection) -> None:
+    """Add per-line GST treatment while preserving legacy invoice totals.
+
+    Historical documents with a non-zero stored GST amount necessarily used
+    the old all-taxable calculation.  Documents with no stored GST are marked
+    GST-free so changing a company's registration later cannot add tax when an
+    old, still-editable invoice is opened and saved.
+    """
+    inspector = inspect(connection)
+    tables = set(inspector.get_table_names())
+    if "document_lines" not in tables or "documents" not in tables:
+        return
+    columns = {column["name"] for column in inspector.get_columns("document_lines")}
+    if "gst_treatment" not in columns:
+        connection.exec_driver_sql(
+            "ALTER TABLE document_lines ADD COLUMN gst_treatment VARCHAR(20) "
+            "NOT NULL DEFAULT 'gst_free'"
+        )
+        connection.exec_driver_sql(
+            """
+            UPDATE document_lines
+            SET gst_treatment = 'taxable'
+            WHERE EXISTS (
+                SELECT 1
+                FROM documents
+                WHERE documents.id = document_lines.document_id
+                  AND documents.gst_amount != 0
+            )
+            """
+        )
+
+
 def _migrate_database(connection: Connection) -> None:
     """Run schema changes atomically while preserving partial-schema foreign keys."""
     connection.exec_driver_sql("PRAGMA foreign_keys = OFF")
@@ -315,6 +347,7 @@ def _migrate_database(connection: Connection) -> None:
         _migrate_company_names(connection)
         Base.metadata.create_all(connection)
         _migrate_company_scope(connection)
+        _migrate_line_gst_treatment(connection)
         violations = connection.exec_driver_sql("PRAGMA foreign_key_check").all()
         if violations:
             details = "; ".join(

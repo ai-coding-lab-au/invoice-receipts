@@ -3,18 +3,18 @@
 #endif
 
 #ifndef MySourceDir
-  #define MySourceDir "..\dist\InvoiceReceipts"
+  #define MySourceDir "..\dist\SuperlightInvoice"
 #endif
 
-#define MyAppName "Invoice & Receipts"
-#define MyAppExeName "InvoiceReceipts.exe"
+#define MyAppName "Superlight Invoice"
+#define MyAppExeName "SuperlightInvoice.exe"
 
 [Setup]
 AppId={{6EB50434-4C74-45AA-991E-913486DD33F2}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
-DefaultDirName={localappdata}\Programs\InvoiceReceipts
+DefaultDirName={localappdata}\Programs\SuperlightInvoice
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=auto
 AllowNoIcons=yes
@@ -23,7 +23,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 LicenseFile=..\LICENSE
 OutputDir=..\installer-output
-OutputBaseFilename=InvoiceReceipts-{#MyAppVersion}-Setup
+OutputBaseFilename=SuperlightInvoice-{#MyAppVersion}-Setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -41,6 +41,13 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 
 [Files]
 Source: "{#MySourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[InstallDelete]
+; The AppId is intentionally unchanged, so this is an in-place upgrade. Remove
+; only the obsolete executable left by builds from before the product rename.
+Type: files; Name: "{app}\InvoiceReceipts.exe"
+Type: files; Name: "{autoprograms}\Invoice & Receipts.lnk"
+Type: files; Name: "{autodesktop}\Invoice & Receipts.lnk"
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
