@@ -410,7 +410,7 @@ async def lifespan(_app: FastAPI):
         dispose_engine()
 
 
-app = FastAPI(title="Superlight Invoice", version="2.0.0", lifespan=lifespan)
+app = FastAPI(title="Superlight Invoice", version="2.1.0", lifespan=lifespan)
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["127.0.0.1", "localhost", "[::1]", "::1", "testserver"],

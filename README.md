@@ -90,7 +90,7 @@ its adjacent `_internal` directory. To turn that folder into the single-file
 installer after installing Inno Setup 6:
 
 ```powershell
-.\scripts\build-windows-installer.ps1 -Version 2.0.0
+.\scripts\build-windows-installer.ps1 -Version 2.1.0
 ```
 
 GitHub's release workflow builds both the recommended Setup EXE and a portable
