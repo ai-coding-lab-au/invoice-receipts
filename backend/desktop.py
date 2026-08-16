@@ -35,7 +35,6 @@ def default_user_data_dir(
     platform_name: str | None = None,
     environ: Mapping[str, str] | None = None,
     home: Path | None = None,
-    app_dir_name: str = APP_DATA_DIR_NAME,
 ) -> Path:
     """Return a per-user data directory suitable for an installed desktop app."""
     platform_name = platform_name or sys.platform
@@ -48,7 +47,7 @@ def default_user_data_dir(
         base = home / "Library" / "Application Support"
     else:
         base = Path(environ.get("XDG_DATA_HOME", home / ".local" / "share"))
-    return (base / app_dir_name).resolve()
+    return (base / APP_DATA_DIR_NAME).resolve()
 
 
 def data_dir_preference_path() -> Path:
@@ -59,9 +58,10 @@ def data_dir_preference_path() -> Path:
 def legacy_data_dir_preference_path() -> Path:
     """Locate the preference written before the Superlight Invoice rename."""
     return (
-        default_user_data_dir(app_dir_name=LEGACY_APP_DATA_DIR_NAME)
+        default_user_data_dir().parent
+        / LEGACY_APP_DATA_DIR_NAME
         / DATA_DIR_PREFERENCE_FILE
-    )
+    ).resolve()
 
 
 def _resolved_data_dir(value: str | os.PathLike[str], *, relative_to: Path) -> Path:
