@@ -109,7 +109,7 @@ The confirmed folder is remembered in
 name intentionally remains unchanged after the Superlight Invoice rename, so
 upgrades keep the last selected data folder without a migration step.
 
-## Run on Linux/macOS
+## Run in a browser on Linux/macOS
 
 ```bash
 ./install.sh
@@ -119,6 +119,23 @@ upgrades keep the last selected data folder without a migration step.
 Open <http://127.0.0.1:8790>. Fill in Settings first: the legal name, ABN and
 bank details are printed on every document; the business name is optional. A
 GST-registered business needs a valid ABN before anything can be issued.
+
+## macOS desktop development
+
+The native macOS edition is now prepared for development builds. On a Mac:
+
+```bash
+./install-desktop-macos.sh
+./run-desktop-macos.sh
+```
+
+Use `./build-desktop-macos.sh` to create `dist/SuperlightInvoice.app`. GitHub
+Actions also builds unsigned Apple Silicon and Intel test artifacts, so most
+development can continue without owning a Mac. A Mac is still strongly
+recommended for native UI testing, and public downloads must be Developer ID
+signed and Apple-notarized first. See
+[`docs/MACOS_DEVELOPMENT.md`](docs/MACOS_DEVELOPMENT.md) for the exact workflow
+and release boundary.
 
 ## Where the data lives
 

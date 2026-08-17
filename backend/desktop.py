@@ -24,7 +24,10 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 APP_TITLE = "Superlight Invoice"
 APP_USER_MODEL_ID = "AICodingLab.SuperlightInvoice"
-APP_ICON_FILENAME = "superlight-invoice.ico"
+APP_ICON_FILENAMES = {
+    "darwin": "superlight-invoice.icns",
+    "win32": "superlight-invoice.ico",
+}
 # This internal identifier is intentionally stable across product renames so an
 # upgrade keeps the user's existing data-folder preference automatically.
 APP_DATA_DIR_NAME = "InvoiceReceipts"
@@ -35,10 +38,12 @@ LOOPBACK_HOST = "127.0.0.1"
 
 def desktop_icon_path(
     *,
+    platform_name: str | None = None,
     frozen: bool | None = None,
     bundle_root: Path | None = None,
 ) -> Path:
     """Return the icon file used by the native desktop window."""
+    platform_name = platform_name or sys.platform
     frozen = getattr(sys, "frozen", False) if frozen is None else frozen
     if bundle_root is not None:
         root = bundle_root
@@ -46,7 +51,8 @@ def desktop_icon_path(
         root = Path(getattr(sys, "_MEIPASS", Path(sys.executable).resolve().parent))
     else:
         root = Path(__file__).resolve().parent.parent
-    return root / "branding" / APP_ICON_FILENAME
+    filename = APP_ICON_FILENAMES.get(platform_name, "superlight-invoice-icon.png")
+    return root / "branding" / filename
 
 
 def configure_windows_app_identity(
@@ -178,11 +184,8 @@ def _prepare_data_dir(
     return selected
 
 
-def prompt_for_data_dir(initial: Path, last_used: Path | None) -> Path | None:
+def _prompt_for_data_dir_windows(initial: Path, last_used: Path | None) -> Path | None:
     """Show the native Windows folder picker before the database is opened."""
-    if sys.platform != "win32":
-        raise RuntimeError("The desktop data-folder picker currently requires Windows")
-
     import clr
 
     clr.AddReference("System.Windows.Forms")
@@ -234,6 +237,50 @@ def prompt_for_data_dir(initial: Path, last_used: Path | None) -> Path | None:
     if failures:
         raise RuntimeError(f"The data-folder picker failed: {failures[0]}") from failures[0]
     return selected[0] if selected else None
+
+
+def _prompt_for_data_dir_macos(initial: Path, last_used: Path | None) -> Path | None:
+    """Show a directory-only NSOpenPanel on the macOS application thread."""
+    from AppKit import NSApplication, NSModalResponseOK, NSOpenPanel
+    from Foundation import NSURL
+
+    application = NSApplication.sharedApplication()
+    application.activateIgnoringOtherApps_(True)
+
+    last_label = str(last_used) if last_used else "No folder has been selected before."
+    panel = NSOpenPanel.openPanel()
+    panel.setCanChooseDirectories_(True)
+    panel.setCanChooseFiles_(False)
+    panel.setCanCreateDirectories_(True)
+    panel.setAllowsMultipleSelection_(False)
+    panel.setPrompt_("Choose")
+    panel.setTitle_("Choose a Superlight Invoice data folder")
+    panel.setMessage_(
+        "Choose the folder that stores the database and every PDF.\n\n"
+        f"Last used folder: {last_label}\n\n"
+        "Changing folders opens a different database; existing data is not moved."
+    )
+    panel.setDirectoryURL_(NSURL.fileURLWithPath_(str(_nearest_existing_directory(initial))))
+
+    if panel.runModal() != NSModalResponseOK:
+        return None
+    url = panel.URL()
+    return Path(str(url.path())).resolve() if url is not None else None
+
+
+def prompt_for_data_dir(
+    initial: Path,
+    last_used: Path | None,
+    *,
+    platform_name: str | None = None,
+) -> Path | None:
+    """Show the platform-native data-folder picker before opening the database."""
+    platform_name = platform_name or sys.platform
+    if platform_name == "win32":
+        return _prompt_for_data_dir_windows(initial, last_used)
+    if platform_name == "darwin":
+        return _prompt_for_data_dir_macos(initial, last_used)
+    raise RuntimeError("The desktop data-folder picker requires Windows or macOS")
 
 
 def configure_desktop_data_dir(
@@ -378,6 +425,21 @@ def _show_error(message: str) -> None:
     if sys.platform == "win32":
         try:
             ctypes.windll.user32.MessageBoxW(None, message, APP_TITLE, 0x10)
+            return
+        except Exception:
+            pass
+    elif sys.platform == "darwin":
+        try:
+            from AppKit import NSAlert, NSAlertStyleCritical, NSApplication
+
+            application = NSApplication.sharedApplication()
+            application.activateIgnoringOtherApps_(True)
+            alert = NSAlert.alloc().init()
+            alert.setAlertStyle_(NSAlertStyleCritical)
+            alert.setMessageText_(APP_TITLE)
+            alert.setInformativeText_(message)
+            alert.addButtonWithTitle_("OK")
+            alert.runModal()
             return
         except Exception:
             pass

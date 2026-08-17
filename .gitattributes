@@ -20,6 +20,7 @@
 
 *.ttf binary
 *.ico binary
+*.icns binary
 *.png binary
 *.jpg binary
 *.jpeg binary
