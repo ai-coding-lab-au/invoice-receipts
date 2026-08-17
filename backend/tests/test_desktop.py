@@ -14,6 +14,7 @@ from desktop import (
     _active_runtime_owner,
     _reserve_loopback_socket,
     _run_folder_picker_thread,
+    configure_webview_downloads,
     configure_windows_app_identity,
     configure_desktop_data_dir,
     default_user_data_dir,
@@ -50,6 +51,14 @@ def test_windows_app_identity_matches_the_installed_shortcuts():
 
 def test_windows_app_identity_is_not_set_on_other_platforms():
     assert not configure_windows_app_identity(platform_name="linux", shell32=object())
+
+
+def test_desktop_enables_native_downloads():
+    settings = {"ALLOW_DOWNLOADS": False}
+
+    configure_webview_downloads(settings)
+
+    assert settings["ALLOW_DOWNLOADS"] is True
 
 
 def desktop_test_client() -> TestClient:

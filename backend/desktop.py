@@ -70,6 +70,11 @@ def configure_windows_app_identity(
         return False
 
 
+def configure_webview_downloads(settings: MutableMapping[str, object]) -> None:
+    """Use WebView2's native Save As dialog for application downloads."""
+    settings["ALLOW_DOWNLOADS"] = True
+
+
 def default_user_data_dir(
     *,
     platform_name: str | None = None,
@@ -407,6 +412,8 @@ def run_desktop() -> int:
 
     from app.config import settings
     from app.main import app
+
+    configure_webview_downloads(webview.settings)
 
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(

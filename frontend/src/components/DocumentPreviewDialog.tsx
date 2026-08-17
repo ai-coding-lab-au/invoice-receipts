@@ -39,6 +39,10 @@ export default function DocumentPreviewDialog({
   const isVoid = document.status === "void";
   const isInvoice = document.doc_type === "invoice";
   const label = isInvoice ? "Invoice" : "Receipt";
+  const downloadUrl =
+    companyId === null
+      ? pdfUrl
+      : `/api/v1/documents/${document.id}/pdf/download?company_id=${companyId}`;
 
   useEffect(() => {
     if (isVoid) return;
@@ -266,9 +270,9 @@ export default function DocumentPreviewDialog({
           )}
         </div>
 
-        {pdfUrl && (
+        {pdfUrl && downloadUrl && (
           <footer className="flex justify-end border-t px-5 py-3">
-            <a className="btn-secondary" href={pdfUrl} download={`${document.doc_number}.pdf`}>
+            <a className="btn-secondary" href={downloadUrl}>
               Download PDF
             </a>
           </footer>

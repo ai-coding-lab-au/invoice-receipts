@@ -9,6 +9,8 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 - The branded application icon is now applied consistently to the native
   Windows window, taskbar identity and installed shortcuts.
+- Download PDF now opens the native Windows Save As dialog in the desktop app.
+- The New client action in the invoice editor is now easier to identify.
 
 ## [2.2.0] - 2026-08-17
 
