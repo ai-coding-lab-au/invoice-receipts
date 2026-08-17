@@ -618,6 +618,22 @@ def test_pdf_uses_legal_name_when_there_is_no_trading_name(client):
     assert "Legal name: Only Legal Name Pty Ltd" not in text
 
 
+def test_pdf_download_uses_a_real_attachment_filename(client):
+    client_id = make_client(client)
+    invoice = make_invoice(client, client_id).json()
+
+    response = client.get(
+        f"/api/v1/documents/{invoice['id']}/pdf/download",
+        params={"company_id": 1},
+    )
+
+    assert response.status_code == 200
+    assert response.content.startswith(b"%PDF")
+    assert response.headers["content-disposition"] == (
+        f'attachment; filename="{invoice["doc_number"]}.pdf"'
+    )
+
+
 def test_company_name_is_repeated_on_every_pdf_continuation_page(client):
     client_id = make_client(client)
     response = client.post(

@@ -39,6 +39,7 @@ from .services.pdf_render import render_document_pdf
 
 PathId = Annotated[int, ApiPath(ge=1, le=2**63 - 1)]
 CompanyId = Annotated[int, Header(alias="X-Company-ID", ge=1, le=2**63 - 1)]
+DownloadCompanyId = Annotated[int, Query(alias="company_id", ge=1, le=2**63 - 1)]
 LIST_LIMIT = 500
 
 
@@ -410,7 +411,7 @@ async def lifespan(_app: FastAPI):
         dispose_engine()
 
 
-app = FastAPI(title="Superlight Invoice", version="2.2.0", lifespan=lifespan)
+app = FastAPI(title="Superlight Invoice", version="2.2.1", lifespan=lifespan)
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["127.0.0.1", "localhost", "[::1]", "::1", "testserver"],
@@ -1056,13 +1057,13 @@ def restore_document(
 # --------------------------------------------------------------------------- PDF & audit
 
 
-@app.get("/api/v1/documents/{document_id}/pdf")
-def document_pdf(
-    document_id: PathId,
-    company_id: CompanyId,
-    inline: bool = True,
-    session: Session = Depends(get_db),
-):
+def _document_pdf_response(
+    document_id: int,
+    company_id: int,
+    *,
+    inline: bool,
+    session: Session,
+) -> Response:
     document = (
         session.query(Document)
         .filter(Document.id == document_id, Document.company_id == company_id)
@@ -1081,6 +1082,36 @@ def document_pdf(
         headers={
             "Content-Disposition": f'{disposition}; filename="{document.doc_number}.pdf"'
         },
+    )
+
+
+@app.get("/api/v1/documents/{document_id}/pdf")
+def document_pdf(
+    document_id: PathId,
+    company_id: CompanyId,
+    inline: bool = True,
+    session: Session = Depends(get_db),
+):
+    return _document_pdf_response(
+        document_id,
+        company_id,
+        inline=inline,
+        session=session,
+    )
+
+
+@app.get("/api/v1/documents/{document_id}/pdf/download")
+def download_document_pdf(
+    document_id: PathId,
+    company_id: DownloadCompanyId,
+    session: Session = Depends(get_db),
+):
+    """Serve a real attachment URL for WebView2's native download handler."""
+    return _document_pdf_response(
+        document_id,
+        company_id,
+        inline=False,
+        session=session,
     )
 
 

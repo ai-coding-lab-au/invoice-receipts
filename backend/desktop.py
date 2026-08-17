@@ -23,12 +23,56 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 
 APP_TITLE = "Superlight Invoice"
+APP_USER_MODEL_ID = "AICodingLab.SuperlightInvoice"
+APP_ICON_FILENAME = "superlight-invoice.ico"
 # This internal identifier is intentionally stable across product renames so an
 # upgrade keeps the user's existing data-folder preference automatically.
 APP_DATA_DIR_NAME = "InvoiceReceipts"
 DATA_DIR_PREFERENCE_FILE = "desktop-preferences.json"
 DESKTOP_COOKIE_NAME = "invoice_receipts_desktop"
 LOOPBACK_HOST = "127.0.0.1"
+
+
+def desktop_icon_path(
+    *,
+    frozen: bool | None = None,
+    bundle_root: Path | None = None,
+) -> Path:
+    """Return the icon file used by the native desktop window."""
+    frozen = getattr(sys, "frozen", False) if frozen is None else frozen
+    if bundle_root is not None:
+        root = bundle_root
+    elif frozen:
+        root = Path(getattr(sys, "_MEIPASS", Path(sys.executable).resolve().parent))
+    else:
+        root = Path(__file__).resolve().parent.parent
+    return root / "branding" / APP_ICON_FILENAME
+
+
+def configure_windows_app_identity(
+    *,
+    platform_name: str | None = None,
+    shell32: object | None = None,
+) -> bool:
+    """Give Windows a stable taskbar identity before any application UI opens."""
+    platform_name = platform_name or sys.platform
+    if platform_name != "win32":
+        return False
+    try:
+        windows_shell = shell32 or ctypes.windll.shell32
+        setter = windows_shell.SetCurrentProcessExplicitAppUserModelID
+        if shell32 is None:
+            setter.argtypes = [ctypes.c_wchar_p]
+            setter.restype = ctypes.c_long
+        return int(setter(APP_USER_MODEL_ID)) == 0
+    except (AttributeError, OSError, TypeError, ValueError):
+        logging.warning("Windows could not set the application taskbar identity", exc_info=True)
+        return False
+
+
+def configure_webview_downloads(settings: MutableMapping[str, object]) -> None:
+    """Use WebView2's native Save As dialog for application downloads."""
+    settings["ALLOW_DOWNLOADS"] = True
 
 
 def default_user_data_dir(
@@ -341,6 +385,10 @@ def _show_error(message: str) -> None:
 
 
 def run_desktop() -> int:
+    # Windows requires the process identity before any UI, including the data
+    # folder picker, is displayed. It keeps the window and installed shortcuts
+    # grouped under the branded taskbar icon.
+    configure_windows_app_identity()
     try:
         selected_data_dir = configure_desktop_data_dir()
     except Exception as exc:
@@ -364,6 +412,8 @@ def run_desktop() -> int:
 
     from app.config import settings
     from app.main import app
+
+    configure_webview_downloads(webview.settings)
 
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
@@ -420,7 +470,7 @@ def run_desktop() -> int:
             background_color="#f7f7f5",
             text_select=True,
         )
-        webview.start(private_mode=True)
+        webview.start(private_mode=True, icon=str(desktop_icon_path()))
     except Exception as exc:
         logging.exception("Desktop window failed")
         _show_error(f"Unable to open the desktop window.\n\n{exc}")

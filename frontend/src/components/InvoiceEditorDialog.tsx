@@ -238,7 +238,7 @@ export default function InvoiceEditorDialog({
                 </label>
                 <button
                   type="button"
-                  className="text-xs font-medium text-emerald-800 hover:text-emerald-950 hover:underline"
+                  className="inline-flex h-[30px] shrink-0 items-center justify-center rounded border border-emerald-300 bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-900 shadow-sm transition-colors hover:border-emerald-400 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 active:scale-[0.98]"
                   onClick={() => setAddingClient(true)}
                 >
                   + New client

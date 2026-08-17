@@ -9,12 +9,16 @@ from app.runtime_lock import acquire_runtime_lock, runtime_lock_path
 
 from desktop import (
     APP_DATA_DIR_NAME,
+    APP_USER_MODEL_ID,
     DesktopAccessMiddleware,
     _active_runtime_owner,
     _reserve_loopback_socket,
     _run_folder_picker_thread,
+    configure_webview_downloads,
+    configure_windows_app_identity,
     configure_desktop_data_dir,
     default_user_data_dir,
+    desktop_icon_path,
     load_last_data_dir,
 )
 
@@ -25,6 +29,36 @@ def test_folder_picker_worker_runs_to_completion():
     _run_folder_picker_thread(lambda: calls.append("completed"))
 
     assert calls == ["completed"]
+
+
+def test_desktop_icon_path_uses_the_packaged_branding_directory(tmp_path):
+    assert desktop_icon_path(frozen=True, bundle_root=tmp_path) == (
+        tmp_path / "branding" / "superlight-invoice.ico"
+    )
+
+
+def test_windows_app_identity_matches_the_installed_shortcuts():
+    seen = []
+
+    class FakeShell32:
+        def SetCurrentProcessExplicitAppUserModelID(self, value):
+            seen.append(value)
+            return 0
+
+    assert configure_windows_app_identity(platform_name="win32", shell32=FakeShell32())
+    assert seen == [APP_USER_MODEL_ID]
+
+
+def test_windows_app_identity_is_not_set_on_other_platforms():
+    assert not configure_windows_app_identity(platform_name="linux", shell32=object())
+
+
+def test_desktop_enables_native_downloads():
+    settings = {"ALLOW_DOWNLOADS": False}
+
+    configure_webview_downloads(settings)
+
+    assert settings["ALLOW_DOWNLOADS"] is True
 
 
 def desktop_test_client() -> TestClient:
