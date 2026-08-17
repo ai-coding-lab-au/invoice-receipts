@@ -5,6 +5,11 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Replaced the real-world ABN used in form placeholders with the fictional
+  format example `12 345 678 901`.
+
 ## [2.1.0] - 2026-08-16
 
 ### Added

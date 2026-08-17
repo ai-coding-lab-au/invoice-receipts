@@ -211,7 +211,7 @@ function ClientDialog({ client, onClose }: { client: Client | null; onClose: () 
           <Field label="ABN">
             <input
               className="input"
-              placeholder="e.g. 51 824 753 556"
+              placeholder="e.g. 12 345 678 901"
               value={draft.abn}
               onChange={(event) => set({ abn: event.target.value })}
             />
