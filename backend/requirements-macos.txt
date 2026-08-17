@@ -1,0 +1,6 @@
+-r requirements-desktop.txt
+pyobjc-core==12.2.2
+pyobjc-framework-Cocoa==12.2.2
+pyobjc-framework-Quartz==12.2.2
+pyobjc-framework-WebKit==12.2.2
+pyobjc-framework-Security==12.2.2

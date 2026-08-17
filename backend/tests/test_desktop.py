@@ -32,8 +32,14 @@ def test_folder_picker_worker_runs_to_completion():
 
 
 def test_desktop_icon_path_uses_the_packaged_branding_directory(tmp_path):
-    assert desktop_icon_path(frozen=True, bundle_root=tmp_path) == (
+    assert desktop_icon_path(platform_name="win32", frozen=True, bundle_root=tmp_path) == (
         tmp_path / "branding" / "superlight-invoice.ico"
+    )
+    assert desktop_icon_path(platform_name="darwin", frozen=True, bundle_root=tmp_path) == (
+        tmp_path / "branding" / "superlight-invoice.icns"
+    )
+    assert desktop_icon_path(platform_name="linux", frozen=True, bundle_root=tmp_path) == (
+        tmp_path / "branding" / "superlight-invoice-icon.png"
     )
 
 
@@ -83,6 +89,39 @@ def test_desktop_data_uses_local_app_data_on_windows():
         home=test_root,
     )
     assert result == (test_root / "local" / APP_DATA_DIR_NAME).resolve()
+
+
+def test_desktop_data_uses_application_support_on_macos(tmp_path):
+    result = default_user_data_dir(platform_name="darwin", home=tmp_path)
+
+    assert result == (tmp_path / "Library" / "Application Support" / APP_DATA_DIR_NAME).resolve()
+
+
+def test_data_folder_prompt_uses_the_platform_native_picker(tmp_path, monkeypatch):
+    initial = tmp_path / "initial"
+    previous = tmp_path / "previous"
+    windows_choice = tmp_path / "windows"
+    mac_choice = tmp_path / "mac"
+
+    monkeypatch.setattr(
+        desktop,
+        "_prompt_for_data_dir_windows",
+        lambda received_initial, received_previous: (
+            windows_choice if (received_initial, received_previous) == (initial, previous) else None
+        ),
+    )
+    monkeypatch.setattr(
+        desktop,
+        "_prompt_for_data_dir_macos",
+        lambda received_initial, received_previous: (
+            mac_choice if (received_initial, received_previous) == (initial, previous) else None
+        ),
+    )
+
+    assert desktop.prompt_for_data_dir(initial, previous, platform_name="win32") == windows_choice
+    assert desktop.prompt_for_data_dir(initial, previous, platform_name="darwin") == mac_choice
+    with pytest.raises(RuntimeError, match="Windows or macOS"):
+        desktop.prompt_for_data_dir(initial, previous, platform_name="linux")
 
 
 def test_reserved_loopback_port_cannot_be_stolen_before_server_start():

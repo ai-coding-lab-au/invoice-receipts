@@ -1,0 +1,114 @@
+name: macOS development build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/build-macos.yml"
+      - "backend/**"
+      - "branding/**"
+      - "frontend/**"
+      - "scripts/collect_licenses.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build unsigned app (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/pyproject.toml
+            backend/requirements-desktop.txt
+            backend/requirements-macos.txt
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Confirm runner architecture
+        run: test "$(uname -m)" = "${{ matrix.arch }}"
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Install backend, test and macOS desktop dependencies
+        run: |
+          python -m pip install -e "./backend[dev]"
+          python -m pip install -r backend/requirements-macos.txt
+
+      - name: Run backend tests
+        run: python -m pytest backend/tests -q --basetemp "${{ runner.temp }}/pytest"
+
+      - name: Build app bundle
+        run: python -m PyInstaller --noconfirm --clean backend/desktop-macos.spec
+
+      - name: Add source and license notices
+        run: |
+          app_resources="dist/SuperlightInvoice.app/Contents/Resources"
+          python scripts/collect_licenses.py --output "$app_resources/licenses"
+          cp README.md "$app_resources/README.md"
+          {
+            echo "Corresponding source for this build:"
+            echo "${{ github.server_url }}/${{ github.repository }}/tree/${{ github.sha }}"
+            echo
+            echo "License: AGPL-3.0-only. See licenses/project/LICENSE."
+            echo "This software is provided without warranty."
+          } > "$app_resources/SOURCE.txt"
+
+      - name: Verify app bundle
+        run: |
+          test -x dist/SuperlightInvoice.app/Contents/MacOS/SuperlightInvoice
+          plutil -lint dist/SuperlightInvoice.app/Contents/Info.plist
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' dist/SuperlightInvoice.app/Contents/Info.plist)" = "au.com.aicodinglab.superlightinvoice"
+          codesign --force --deep --sign - dist/SuperlightInvoice.app
+          codesign --verify --deep --strict --verbose=2 dist/SuperlightInvoice.app
+
+      - name: Package development artifact
+        id: package
+        run: |
+          version="$(python -c 'import tomllib; print(tomllib.load(open("backend/pyproject.toml", "rb"))["project"]["version"])')"
+          mkdir -p release-artifacts
+          archive="release-artifacts/SuperlightInvoice-$version-macos-${{ matrix.arch }}-unsigned.zip"
+          ditto -c -k --sequesterRsrc --keepParent dist/SuperlightInvoice.app "$archive"
+          checksum="release-artifacts/SHA256SUMS-macos-${{ matrix.arch }}.txt"
+          shasum -a 256 "$archive" > "$checksum"
+          test "$(stat -f%z "$archive")" -gt 1048576
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+          echo "checksum=$checksum" >> "$GITHUB_OUTPUT"
+
+      - name: Upload unsigned development build
+        uses: actions/upload-artifact@v6
+        with:
+          name: SuperlightInvoice-macOS-${{ matrix.arch }}-unsigned
+          path: |
+            ${{ steps.package.outputs.archive }}
+            ${{ steps.package.outputs.checksum }}
+          if-no-files-found: error

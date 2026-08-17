@@ -5,6 +5,12 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Native macOS development support with a Cocoa data-folder picker, branded
+  app bundle, local launcher/build scripts and unsigned Apple Silicon and Intel
+  CI artifacts.
+
 ## [2.2.1] - 2026-08-17
 
 ### Fixed
