@@ -22,6 +22,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 LicenseFile=..\LICENSE
+SetupIconFile=..\branding\superlight-invoice.ico
 OutputDir=..\installer-output
 OutputBaseFilename=SuperlightInvoice-{#MyAppVersion}-Setup
 Compression=lzma2/max

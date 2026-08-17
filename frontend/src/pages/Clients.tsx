@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api, getActiveCompanyId, limitedList } from "../lib/api";
@@ -142,8 +142,18 @@ export default function ClientsPage() {
   );
 }
 
-function ClientDialog({ client, onClose }: { client: Client | null; onClose: () => void }) {
+export function ClientDialog({
+  client,
+  onClose,
+  onSaved,
+}: {
+  client: Client | null;
+  onClose: () => void;
+  onSaved?: (client: Client) => void;
+}) {
   const queryClient = useQueryClient();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const mutationPendingRef = useRef(false);
   const [draft, setDraft] = useState<Draft>(() =>
     client
       ? {
@@ -176,8 +186,9 @@ function ClientDialog({ client, onClose }: { client: Client | null; onClose: () 
       }
       return (await api.post<Client>("/clients", body)).data;
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+      onSaved?.(saved);
       onClose();
     },
   });
@@ -189,13 +200,20 @@ function ClientDialog({ client, onClose }: { client: Client | null; onClose: () 
   const submit = () => {
     if (!problems.length && !mutation.isPending) mutation.mutate();
   };
-  useModalKeys({ open: true, onClose, onSubmit: submit });
+  mutationPendingRef.current = mutation.isPending;
+  const requestClose = () => {
+    if (!mutationPendingRef.current) onClose();
+  };
+  useModalKeys({ open: true, onClose: requestClose, onSubmit: submit, containerRef: dialogRef });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-3">
       <div
+        ref={dialogRef}
         role="dialog"
         aria-label={client ? `Edit ${client.display_name}` : "New client"}
+        aria-modal="true"
+        tabIndex={-1}
         className="card w-[min(520px,calc(100vw-24px))] max-h-[calc(100vh-24px)] overflow-y-auto p-5"
       >
         <h3 className="font-semibold">{client ? "Edit client" : "New client"}</h3>
@@ -211,7 +229,7 @@ function ClientDialog({ client, onClose }: { client: Client | null; onClose: () 
           <Field label="ABN">
             <input
               className="input"
-              placeholder="e.g. 51 824 753 556"
+              placeholder="e.g. 12 345 678 901"
               value={draft.abn}
               onChange={(event) => set({ abn: event.target.value })}
             />
@@ -266,7 +284,7 @@ function ClientDialog({ client, onClose }: { client: Client | null; onClose: () 
           </ul>
         )}
         <div className="mt-5 flex justify-end gap-2">
-          <button className="btn-secondary" onClick={onClose} disabled={mutation.isPending}>
+          <button className="btn-secondary" onClick={requestClose} disabled={mutation.isPending}>
             Cancel
           </button>
           <button

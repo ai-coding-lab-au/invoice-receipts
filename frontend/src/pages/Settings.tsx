@@ -98,7 +98,7 @@ export default function SettingsPage() {
                 <span className="mb-1 block text-slate-600">{label}</span>
                 <input
                   className="input"
-                  placeholder={key === "abn" ? "e.g. 51 824 753 556" : undefined}
+                  placeholder={key === "abn" ? "e.g. 12 345 678 901" : undefined}
                   value={(merged[key] as string | null) ?? ""}
                   required={key === "legal_name"}
                   onChange={(event) =>

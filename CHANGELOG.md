@@ -5,6 +5,22 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-08-17
+
+### Added
+
+- Clients can be created from the invoice editor and selected immediately
+  without losing the invoice draft.
+- A dedicated Superlight Invoice icon is embedded in the Windows application
+  and installer.
+
+### Changed
+
+- Replaced the real-world ABN used in form placeholders with the fictional
+  format example `12 345 678 901`.
+- Nested invoice and client dialogs now keep keyboard focus in the active
+  dialog and cannot be dismissed while a client is being saved.
+
 ## [2.1.0] - 2026-08-16
 
 ### Added
