@@ -2,6 +2,7 @@ from pathlib import Path
 
 
 backend_dir = Path(SPECPATH)
+icon_path = backend_dir.parent / "branding" / "superlight-invoice.ico"
 
 a = Analysis(
     [str(backend_dir / "desktop.py")],
@@ -38,6 +39,7 @@ exe = EXE(
     strip=False,
     upx=False,
     console=False,
+    icon=str(icon_path),
     disable_windowed_traceback=False,
 )
 

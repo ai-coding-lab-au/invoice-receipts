@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api, getActiveCompanyId } from "../lib/api";
@@ -180,6 +180,17 @@ export default function InvoiceEditorDialog({
     setAddingClient(false);
     window.requestAnimationFrame(() => clientSelectRef.current?.focus());
   };
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (addingClient) {
+      dialog.setAttribute("inert", "");
+    } else {
+      dialog.removeAttribute("inert");
+    }
+    return () => dialog.removeAttribute("inert");
+  }, [addingClient]);
 
   const validationMessage =
     showProblems && problems.length > 0
