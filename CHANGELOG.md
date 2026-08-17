@@ -5,6 +5,8 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-08-17
+
 ### Fixed
 
 - The branded application icon is now applied consistently to the native
