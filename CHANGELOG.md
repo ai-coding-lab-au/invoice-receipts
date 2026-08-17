@@ -5,6 +5,8 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-08-17
+
 ### Added
 
 - Clients can be created from the invoice editor and selected immediately
