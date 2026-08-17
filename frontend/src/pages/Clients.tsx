@@ -142,7 +142,15 @@ export default function ClientsPage() {
   );
 }
 
-function ClientDialog({ client, onClose }: { client: Client | null; onClose: () => void }) {
+export function ClientDialog({
+  client,
+  onClose,
+  onSaved,
+}: {
+  client: Client | null;
+  onClose: () => void;
+  onSaved?: (client: Client) => void;
+}) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<Draft>(() =>
     client
@@ -176,8 +184,9 @@ function ClientDialog({ client, onClose }: { client: Client | null; onClose: () 
       }
       return (await api.post<Client>("/clients", body)).data;
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+      onSaved?.(saved);
       onClose();
     },
   });
@@ -192,7 +201,7 @@ function ClientDialog({ client, onClose }: { client: Client | null; onClose: () 
   useModalKeys({ open: true, onClose, onSubmit: submit });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-3">
       <div
         role="dialog"
         aria-label={client ? `Edit ${client.display_name}` : "New client"}

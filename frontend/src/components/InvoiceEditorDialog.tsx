@@ -7,6 +7,7 @@ import { apiErrorMessage } from "../lib/errors";
 import { formatMoney, moneyProblem, stripMoney } from "../lib/format";
 import { safeStorage } from "../lib/safeStorage";
 import { useModalKeys } from "../lib/useModalKeys";
+import { ClientDialog } from "../pages/Clients";
 import type { Client, Company, DocumentRecord, InvoiceLineInput } from "../types/api";
 
 const emptyLine = (): InvoiceLineInput => ({
@@ -32,8 +33,10 @@ export default function InvoiceEditorDialog({
   const queryClient = useQueryClient();
   const editing = !!invoice;
   const dialogRef = useRef<HTMLDivElement>(null);
+  const clientSelectRef = useRef<HTMLSelectElement>(null);
 
   const [clientId, setClientId] = useState(String(invoice?.client_id ?? ""));
+  const [addingClient, setAddingClient] = useState(false);
   const [issueDate, setIssueDate] = useState(invoice?.issue_date ?? todayLocal());
   const [dueDate, setDueDate] = useState(invoice?.due_date ?? "");
   const [dueTouched, setDueTouched] = useState(!!invoice?.due_date);
@@ -171,7 +174,12 @@ export default function InvoiceEditorDialog({
     }
     if (!mutation.isPending) mutation.mutate();
   };
-  useModalKeys({ open: true, onClose });
+  useModalKeys({ open: !addingClient, onClose });
+
+  const closeClientDialog = () => {
+    setAddingClient(false);
+    window.requestAnimationFrame(() => clientSelectRef.current?.focus());
+  };
 
   const validationMessage =
     showProblems && problems.length > 0
@@ -190,7 +198,8 @@ export default function InvoiceEditorDialog({
         ref={dialogRef}
         role="dialog"
         aria-label={editing ? `Edit ${invoice!.doc_number}` : "New invoice"}
-        aria-modal="true"
+        aria-modal={!addingClient}
+        aria-hidden={addingClient || undefined}
         className="card flex max-h-[calc(100dvh-16px)] w-[min(960px,calc(100vw-16px))] flex-col overflow-hidden shadow-2xl shadow-slate-950/20 sm:max-h-[calc(100dvh-40px)] sm:w-[min(960px,calc(100vw-40px))]"
       >
         <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6">
@@ -211,9 +220,22 @@ export default function InvoiceEditorDialog({
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4 sm:px-6">
           <section className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3 sm:grid-cols-3 sm:p-4">
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Client *</span>
+            <div className="block text-sm">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="font-medium text-slate-700" htmlFor="invoice-client">
+                  Client *
+                </label>
+                <button
+                  type="button"
+                  className="text-xs font-medium text-emerald-800 hover:text-emerald-950 hover:underline"
+                  onClick={() => setAddingClient(true)}
+                >
+                  + New client
+                </button>
+              </div>
               <select
+                ref={clientSelectRef}
+                id="invoice-client"
                 className="input"
                 aria-invalid={showProblems && Number(clientId) <= 0}
                 value={clientId}
@@ -226,7 +248,7 @@ export default function InvoiceEditorDialog({
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
             <label className="block text-sm">
               <span className="mb-1 block font-medium text-slate-700">Invoice date *</span>
               <input
@@ -261,7 +283,7 @@ export default function InvoiceEditorDialog({
               className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900"
               role="status"
             >
-              No active clients yet. Add one on the Clients page first.
+              No active clients yet. Use New client above to add one without leaving this invoice.
             </p>
           )}
 
@@ -475,6 +497,22 @@ export default function InvoiceEditorDialog({
           </div>
         </footer>
       </div>
+      {addingClient && (
+        <ClientDialog
+          client={null}
+          onClose={closeClientDialog}
+          onSaved={(saved) => {
+            queryClient.setQueryData<Client[]>(
+              ["clients", companyId, "picker"],
+              (current) =>
+                [...(current ?? []).filter((client) => client.id !== saved.id), saved].sort(
+                  (left, right) => left.display_name.localeCompare(right.display_name),
+                ),
+            );
+            setClientId(String(saved.id));
+          }}
+        />
+      )}
     </div>
   );
 }

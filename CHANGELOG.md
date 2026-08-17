@@ -5,6 +5,11 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Clients can be created from the invoice editor and selected immediately
+  without losing the invoice draft.
+
 ### Changed
 
 - Replaced the real-world ABN used in form placeholders with the fictional
