@@ -11,6 +11,7 @@ a = Analysis(
     datas=[
         (str(backend_dir / "app" / "static"), "app/static"),
         (str(backend_dir / "app" / "assets"), "app/assets"),
+        (str(icon_path), "branding"),
     ],
     hiddenimports=[
         "clr",

@@ -8,6 +8,7 @@
 
 #define MyAppName "Superlight Invoice"
 #define MyAppExeName "SuperlightInvoice.exe"
+#define MyAppUserModelID "AICodingLab.SuperlightInvoice"
 
 [Setup]
 AppId={{6EB50434-4C74-45AA-991E-913486DD33F2}
@@ -51,8 +52,8 @@ Type: files; Name: "{autoprograms}\Invoice & Receipts.lnk"
 Type: files; Name: "{autodesktop}\Invoice & Receipts.lnk"
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"; IconIndex: 0; AppUserModelID: "{#MyAppUserModelID}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"; IconIndex: 0; AppUserModelID: "{#MyAppUserModelID}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent

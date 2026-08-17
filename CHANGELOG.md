@@ -5,6 +5,11 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- The branded application icon is now applied consistently to the native
+  Windows window, taskbar identity and installed shortcuts.
+
 ## [2.2.0] - 2026-08-17
 
 ### Added
