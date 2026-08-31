@@ -5,11 +5,18 @@ is based on Keep a Changelog and the project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [2.2.2] - 2026-08-31
+
 ### Added
 
 - Native macOS development support with a Cocoa data-folder picker, branded
   app bundle, local launcher/build scripts and unsigned Apple Silicon and Intel
   CI artifacts.
+
+### Fixed
+
+- Rebuilt and revalidated the Windows desktop distribution so Download PDF
+  opens the native Save As dialog in the installed application.
 
 ## [2.2.1] - 2026-08-17
 
